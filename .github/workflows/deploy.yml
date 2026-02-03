@@ -9,23 +9,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1️⃣ Checkout repo
     - name: Checkout repo
       uses: actions/checkout@v3
 
-    # 2️⃣ Setup Python
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: "3.10"
+        python-version: "3.10.19"
 
-    # 3️⃣ Install dependencies
     - name: Install dependencies
       run: |
         pip install --upgrade pip
         pip install -r requirements.txt
 
-    # 4️⃣ Run ML pipelines
     - name: Run ML pipeline
       run: |
         python pipelines/1_ingest.py
@@ -35,11 +31,9 @@ jobs:
         python analytics/churn_kpis.py
         python segmentation/customer_intelligence.py
 
-    # 5️⃣ Build Docker image
     - name: Build Docker image
       run: docker build -t churn-env-app .
 
-    # 6️⃣ Optional: Push Docker image to Docker Hub
     - name: Log in to DockerHub
       if: secrets.DOCKER_USERNAME && secrets.DOCKER_PASSWORD
       uses: docker/login-action@v2
@@ -53,6 +47,5 @@ jobs:
         docker tag churn-env-app:latest ${{ secrets.DOCKER_USERNAME }}/churn-env-app:latest
         docker push ${{ secrets.DOCKER_USERNAME }}/churn-env-app:latest
 
-    # 7️⃣ Done
     - name: Success
       run: echo "✅ CI/CD pipeline completed successfully!"
