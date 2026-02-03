@@ -1,0 +1,14 @@
+artifact_path: file:///C:/Users/user/Churn_env-system/mlruns/1/models/m-bf72577b9b4848a3a1931bdf489f534b/artifacts
+flavors:
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.7.2
+mlflow_version: 3.8.1
+model_id: m-bf72577b9b4848a3a1931bdf489f534b
+model_size_bytes: 93159
+model_uuid: m-bf72577b9b4848a3a1931bdf489f534b
+prompts: null
+run_id: e26d28e7ce3a465eadcda919cf273f3e
+utc_time_created: '2026-01-30 22:05:10.472699'
