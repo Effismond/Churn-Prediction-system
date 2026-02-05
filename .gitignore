@@ -1,0 +1,30 @@
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+Churn_env/
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints/
+
+# Data & output files
+outputs/
+data/
+*.csv
+*.xlsx
+
+# Environment / secret files
+.env
+*.env
+*.secret
+
+# Logs
+*.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db
