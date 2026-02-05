@@ -43,21 +43,18 @@ risk_filter = st.sidebar.multiselect(
 # -----------------------
 if "Churn_num" not in df.columns:
     if df["Churn"].dtype == object:
-        # Convert Yes/No to 1/0
         df["Churn_num"] = df["Churn"].map({"Yes": 1, "No": 0})
     else:
         df["Churn_num"] = df["Churn"]
 
-# Create risk bands based on Churn_Prob if available, else fallback to Churn_num
 if "churn_risk_band" not in df.columns:
-    if "Churn_Prob" in df.columns:
+    if "churn_probability" in df.columns:
         df["churn_risk_band"] = pd.cut(
-            df["Churn_Prob"],
+            df["churn_probability"],
             bins=[-0.01, 0.3, 0.7, 1],
             labels=["Low Risk", "Medium Risk", "High Risk"]
         )
     else:
-        # Only High/Low if no probability
         df["churn_risk_band"] = df["Churn_num"].map({0: "Low Risk", 1: "High Risk"})
 
 # Apply risk filter
@@ -110,28 +107,20 @@ col3.metric("Avg Monthly Charges", format_currency(df_filtered['MonthlyCharges']
 # At-Risk Customers (API)
 # -----------------------
 st.subheader("At-Risk Customers")
-
-API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
-
 try:
+    API_URL = "http://127.0.0.1:8000"  # Local FastAPI
     response = requests.get(f"{API_URL}/at-risk", timeout=5)
+    response.raise_for_status()
+    
+    data = response.json()
+    at_risk_df = pd.DataFrame(data)
 
-    if response.status_code == 200:
-        data = response.json()
-        at_risk_df = pd.DataFrame(data)
+    # Format monetary columns
+    for col in ["CLV", "MonthlyCharges"]:
+        if col in at_risk_df.columns:
+            at_risk_df[col] = at_risk_df[col].apply(lambda x: format_currency(x, region))
 
-        # Format monetary columns
-        for col in ["CLV", "MonthlyCharges"]:
-            if col in at_risk_df.columns:
-                at_risk_df[col] = at_risk_df[col].apply(
-                    lambda x: format_currency(x, region)
-                )
-
-        st.dataframe(at_risk_df.head(50))
-
-    else:
-        st.error(f"API error: {response.status_code}")
-        st.caption(response.text)
+    st.dataframe(at_risk_df.head(50))
 
 except requests.exceptions.RequestException as e:
     st.warning("API not connected yet")
