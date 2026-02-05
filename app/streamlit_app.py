@@ -110,19 +110,32 @@ col3.metric("Avg Monthly Charges", format_currency(df_filtered['MonthlyCharges']
 # At-Risk Customers (API)
 # -----------------------
 st.subheader("At-Risk Customers")
+
+API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
+
 try:
-    API_URL = "http://127.0.0.1:8000"  # Update if deployed
-    data = requests.get(f"{API_URL}/at-risk").json()
-    at_risk_df = pd.DataFrame(data)
+    response = requests.get(f"{API_URL}/at-risk", timeout=5)
 
-    # Format monetary columns
-    for col in ["CLV", "MonthlyCharges"]:
-        if col in at_risk_df.columns:
-            at_risk_df[col] = at_risk_df[col].apply(lambda x: format_currency(x, region))
+    if response.status_code == 200:
+        data = response.json()
+        at_risk_df = pd.DataFrame(data)
 
-    st.dataframe(at_risk_df.head(50))
-except:
+        # Format monetary columns
+        for col in ["CLV", "MonthlyCharges"]:
+            if col in at_risk_df.columns:
+                at_risk_df[col] = at_risk_df[col].apply(
+                    lambda x: format_currency(x, region)
+                )
+
+        st.dataframe(at_risk_df.head(50))
+
+    else:
+        st.error(f"API error: {response.status_code}")
+        st.caption(response.text)
+
+except requests.exceptions.RequestException as e:
     st.warning("API not connected yet")
+    st.caption(str(e))
 
 # -----------------------
 # Full Dataset
