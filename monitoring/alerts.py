@@ -4,15 +4,13 @@ import os
 
 
 def send_alert(subject: str, body: str, to_email: str):
-    """
-    Send email alert when an issue (e.g. data drift) is detected.
-    """
-
     EMAIL_ADDRESS = os.getenv("ALERT_EMAIL")
     EMAIL_PASSWORD = os.getenv("ALERT_EMAIL_PASSWORD")
 
+    # 👇 SAFE EXIT (very important for Streamlit/Render)
     if not EMAIL_ADDRESS or not EMAIL_PASSWORD:
-        raise ValueError("Email credentials not set in environment variables")
+        print("⚠️ Email credentials not set. Skipping alert.")
+        return
 
     msg = EmailMessage()
     msg["Subject"] = subject
