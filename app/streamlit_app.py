@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import time
 import requests
 import os
 import sys
@@ -107,26 +108,34 @@ col3.metric("Avg Monthly Charges", format_currency(df_filtered['MonthlyCharges']
 # At-Risk Customers (API)
 # -----------------------
 st.subheader("At-Risk Customers")
-try:
-    API_URL = "http://127.0.0.1:8000"  # Local FastAPI
-    response = requests.get(f"{API_URL}/at-risk", timeout=5)
-    response.raise_for_status()
-    
-    data = response.json()
-    at_risk_df = pd.DataFrame(data)
 
-    # Format monetary columns
-    for col in ["CLV", "MonthlyCharges"]:
-        if col in at_risk_df.columns:
-            at_risk_df[col] = at_risk_df[col].apply(lambda x: format_currency(x, region))
+API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")  # Make sure this matches your uvicorn command
 
-    st.dataframe(at_risk_df.head(50))
+max_retries = 5
+retry_delay = 2  # seconds
 
-except requests.exceptions.RequestException as e:
-    st.warning("API not connected yet")
-    st.caption(str(e))
+for attempt in range(1, max_retries + 1):
+    try:
+        response = requests.get(f"{API_URL}/at-risk", timeout=5)
+        response.raise_for_status()  # Raise error if status_code is not 200
+        data = response.json()
+        at_risk_df = pd.DataFrame(data)
 
-# -----------------------
+        # Format monetary columns
+        for col in ["CLV", "MonthlyCharges"]:
+            if col in at_risk_df.columns:
+                at_risk_df[col] = at_risk_df[col].apply(lambda x: format_currency(x, region))
+
+        st.dataframe(at_risk_df.head(50))
+        break  # Exit loop if successful
+
+    except requests.exceptions.RequestException as e:
+        if attempt < max_retries:
+            st.warning(f"API not ready, retrying... ({attempt}/{max_retries})")
+            time.sleep(retry_delay)
+        else:
+            st.error("API not connected after several attempts.")
+            st.caption(str(e))
 # Full Dataset
 # -----------------------
 st.subheader("Full Dataset")
