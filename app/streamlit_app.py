@@ -109,7 +109,9 @@ col3.metric("Avg Monthly Charges", format_currency(df_filtered['MonthlyCharges']
 # -----------------------
 st.subheader("At-Risk Customers")
 
-API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")  # Make sure this matches your uvicorn command
+# Read from Streamlit Secrets
+API_URL = st.secrets["API_URL"]
+st.write("API URL:", API_URL)  # optional: confirms connection
 
 max_retries = 5
 retry_delay = 2  # seconds
@@ -117,7 +119,7 @@ retry_delay = 2  # seconds
 for attempt in range(1, max_retries + 1):
     try:
         response = requests.get(f"{API_URL}/at-risk", timeout=5)
-        response.raise_for_status()  # Raise error if status_code is not 200
+        response.raise_for_status()
         data = response.json()
         at_risk_df = pd.DataFrame(data)
 
@@ -127,7 +129,7 @@ for attempt in range(1, max_retries + 1):
                 at_risk_df[col] = at_risk_df[col].apply(lambda x: format_currency(x, region))
 
         st.dataframe(at_risk_df.head(50))
-        break  # Exit loop if successful
+        break
 
     except requests.exceptions.RequestException as e:
         if attempt < max_retries:
@@ -136,6 +138,7 @@ for attempt in range(1, max_retries + 1):
         else:
             st.error("API not connected after several attempts.")
             st.caption(str(e))
+
 # Full Dataset
 # -----------------------
 st.subheader("Full Dataset")
